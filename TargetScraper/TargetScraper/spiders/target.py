@@ -60,5 +60,10 @@ class TargetSpider(scrapy.Spider):
             "downstream_description"
         ]
         item["price"] = product_data["price"]["current_retail"]
-        item["image_urls"] = None
+
+        # process image data
+        image_data = product_data["item"]["enrichment"]["images"]
+        primary_image_url = image_data["primary_image_url"]
+        alternate_image_urls = image_data["alternate_image_urls"]
+        item["image_urls"] = alternate_image_urls + [primary_image_url]
         yield item
