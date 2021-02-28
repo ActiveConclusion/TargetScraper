@@ -19,12 +19,9 @@ class TargetSpider(scrapy.Spider):
 
     def parse(self, response):
         # scrape params for API request
-        # get the URL of current page
+        # get tcin from the URL (number after the last slash)
         product_url = response.request.url
-
-        # get tcin after the last slash from the URL
         tcin_raw = product_url.split("/")[-1]
-        # get the numeric part of tcin
         tcin = tcin_raw.split("-")[1]
 
         # extract api_key and pricing_store_id from page
@@ -44,6 +41,7 @@ class TargetSpider(scrapy.Spider):
             "has_scheduled_delivery_store_id": "false",
             "has_financing_options": "false",
         }
+
         yield scrapy.FormRequest(
             API_BASE_URL, method="GET", callback=self.parse_json_data, formdata=params
         )
@@ -55,6 +53,7 @@ class TargetSpider(scrapy.Spider):
 
         full_data = json.loads(response_text)
         product_data = full_data["data"]["product"]
+
         # load the data into item
         item = ProductItem()
         item["title"] = product_data["item"]["product_description"]["title"]
