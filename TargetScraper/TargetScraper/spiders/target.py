@@ -12,14 +12,16 @@ API_BASE_URL = "https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_
 class TargetSpider(scrapy.Spider):
     name = "target"
     allowed_domains = ["target.com"]
-    start_urls = [
-        "https://www.target.com/p/reese-39-s-easter-peanut-butter-eggs-7-2oz-6ct/-/A-53957905"
-    ]
+    start_urls = None
+
+    def __init__(self, url=None):
+        self.start_urls = [url]
 
     def parse(self, response):
         # scrape params for API request
         # get the URL of current page
         product_url = response.request.url
+
         # get tcin after the last slash from the URL
         tcin_raw = product_url.split("/")[-1]
         # get the numeric part of tcin
@@ -66,4 +68,5 @@ class TargetSpider(scrapy.Spider):
         primary_image_url = image_data["primary_image_url"]
         alternate_image_urls = image_data["alternate_image_urls"]
         item["image_urls"] = alternate_image_urls + [primary_image_url]
+
         yield item
