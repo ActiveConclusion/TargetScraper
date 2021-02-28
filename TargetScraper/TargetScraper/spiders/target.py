@@ -1,7 +1,10 @@
+import html
 import json
 import re
 
 import scrapy
+
+from ..items import ProductItem
 
 API_BASE_URL = "https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1"
 
@@ -14,7 +17,8 @@ class TargetSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        # scrape params for the API request
+        # scrape params for API request
+        # get the URL of current page
         product_url = response.request.url
         # get tcin after the last slash from the URL
         tcin_raw = product_url.split("/")[-1]
@@ -39,8 +43,22 @@ class TargetSpider(scrapy.Spider):
             "has_financing_options": "false",
         }
         yield scrapy.FormRequest(
-            API_BASE_URL, method="GET", callback=self.parse_api, formdata=params
+            API_BASE_URL, method="GET", callback=self.parse_json_data, formdata=params
         )
 
-    def parse_api(self, response):
-        pass
+    def parse_json_data(self, response):
+        # Convert all named and numeric character references
+        # in the response to the corresponding Unicode characters
+        response_text = html.unescape(response.text)
+
+        full_data = json.loads(response_text)
+        product_data = full_data["data"]["product"]
+        # load the data into item
+        item = ProductItem()
+        item["title"] = product_data["item"]["product_description"]["title"]
+        item["description"] = product_data["item"]["product_description"][
+            "downstream_description"
+        ]
+        item["price"] = product_data["price"]["current_retail"]
+        item["image_urls"] = None
+        yield item
